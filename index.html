@@ -250,6 +250,21 @@
   /* nikah gating */
   body:not(.aud-family) #nikahSec{display:none}
   body.ev-nikah #shalimaSec{display:none}
+  /* ---- PRINT / PDF mode ---- */
+  @media print{
+    @page{ size:A4 portrait; margin:0; }
+    html,body{ background:#f8f5ef !important; height:auto !important; overflow:visible !important; }
+    #intro{ display:none !important; }
+    .idust,.star,.nf-cl,.dove{ display:none !important; }
+    section{ position:relative !important; min-height:0 !important; height:1123px !important;
+      box-sizing:border-box; page-break-after:always; break-after:page; overflow:hidden;
+      display:flex !important; align-items:center; justify-content:center; }
+    #footer{ height:auto !important; min-height:620px !important; }
+    section:last-of-type{ page-break-after:auto; }
+    .rv,.reveal,.in .rv,.in .reveal{ opacity:1 !important; transform:none !important; filter:none !important; }
+    *{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important;
+       animation:none !important; transition:none !important; }
+  }
 
   /* ============ FOOTER ============ */
   .ft-mono{width:72px;height:auto;margin:0 auto 14px;opacity:.9}
@@ -672,6 +687,26 @@
       }catch(err){ window.location.href=dataUrl; }
     });
   });
+  /* ---------- PRINT / PDF mode (?print=1) ---------- */
+  (function(){
+    var pp=new URLSearchParams(location.search).get('print');
+    if(pp!=='1'&&pp!=='true') return;
+    var intro=document.getElementById('intro'); if(intro) intro.remove();
+    document.body.classList.remove('locked');
+    document.body.classList.add('printing');
+    $$('section,.rv,.reveal').forEach(function(e){e.classList.add('in');});
+    /* make Add-to-Calendar a real clickable Google Calendar link in the PDF */
+    $$('a.cal').forEach(function(a){
+      var d=a.dataset;
+      a.setAttribute('href','https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(d.title)+'&dates='+d.start+'/'+d.end+'&location='+encodeURIComponent(d.loc)+'&details='+encodeURIComponent(d.desc));
+      a.setAttribute('target','_blank');
+      var nc=a.cloneNode(true); a.parentNode.replaceChild(nc,a); /* drop the JS handler so the href works */
+    });
+    /* trigger the print dialog once fonts/images are ready */
+    function go(){ setTimeout(function(){ try{window.print();}catch(e){} }, 400); }
+    if(document.fonts&&document.fonts.ready){ document.fonts.ready.then(go); setTimeout(go,1500); }
+    else { window.addEventListener('load',go); setTimeout(go,1200); }
+  })();
   /* gold dust */
   function dust(host,cls,n){for(var i=0;i<n;i++){var d=document.createElement('div');d.className=cls;
     d.style.left=(8+Math.random()*84)+'%';d.style.top=(45+Math.random()*50)+'%';
