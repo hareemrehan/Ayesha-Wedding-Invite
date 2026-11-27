@@ -261,6 +261,9 @@
       display:flex !important; align-items:center; justify-content:center; }
     #footer{ height:auto !important; min-height:620px !important; }
     section:last-of-type{ page-break-after:auto; }
+    /* keep per-guest event hiding working in print (section display:flex above is !important) */
+    body:not(.aud-family) #nikahSec{ display:none !important; }
+    body.ev-nikah #shalimaSec{ display:none !important; }
     .rv,.reveal,.in .rv,.in .reveal{ opacity:1 !important; transform:none !important; filter:none !important; }
     *{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important;
        animation:none !important; transition:none !important; }
