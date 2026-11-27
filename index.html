@@ -537,7 +537,7 @@
     <div class="ec-venue rv d5">House 24-C, Khayaban-e-Shahbaz, Phase 6<br>DHA · Karachi</div>
     <div class="btns rv d6">
       <a class="btn" href="https://maps.google.com/?q=House+24-C+Khayaban-e-Shahbaz+Phase+6+DHA+Karachi" target="_blank" rel="noopener">View on Map</a>
-      <a class="btn cal" href="#" data-title="Nikkah — Ayesha &amp; Balaj" data-start="20270101T113000Z" data-end="20270101T140000Z" data-loc="Karachi" data-uid="nikkah-ayeshabalaj-20270101" data-file="Nikkah-Ayesha-Balaj" data-desc="Nikkah of Ayesha Khan & Balaj Alamtab"><span class="dot"></span> Add to Calendar</a>
+      <a class="btn cal" href="#" data-title="Nikkah — Ayesha &amp; Balaj" data-start="20270101T113000Z" data-end="20270101T140000Z" data-loc="Karachi" data-uid="nikkah-ayeshabalaj-20270101" data-file="Nikkah-Ayesha-Balaj" data-desc="Nikkah of Ayesha Khan & Balaj Alamtab" data-alarm="20261231T040000Z"><span class="dot"></span> Add to Calendar</a>
     </div>
     <div class="ec-await rv d7"><small>Awaiting your presence</small><b>Family &amp; Close Ones</b></div>
   </div>
@@ -562,7 +562,7 @@
     <div class="ec-div rv d6"><i></i><b>◆</b><i class="r"></i></div>
     <div class="btns rv d6">
       <a class="btn" href="https://maps.google.com/?q=Creek+Club+Tulip+Coral+DHA+Karachi" target="_blank" rel="noopener">View on Map</a>
-      <a class="btn cal" href="#" data-title="Shalima — Ayesha &amp; Balaj" data-start="20270103T150000Z" data-end="20270103T190000Z" data-loc="Creek Club, Tulip &amp; Coral, DHA, Karachi" data-uid="shalima-ayeshabalaj-20270103" data-file="Shalima-Ayesha-Balaj" data-desc="Shalima of Ayesha Khan & Balaj Alamtab"><span class="dot"></span> Add to Calendar</a>
+      <a class="btn cal" href="#" data-title="Shalima — Ayesha &amp; Balaj" data-start="20270103T143000Z" data-end="20270103T190000Z" data-loc="Creek Club, Tulip &amp; Coral, DHA, Karachi" data-uid="shalima-ayeshabalaj-20270103" data-file="Shalima-Ayesha-Balaj" data-desc="Shalima of Ayesha Khan &amp; Balaj Alamtab" data-alarm="20270102T040000Z"><span class="dot"></span> Add to Calendar</a>
     </div>
     <div class="ec-await rv d7"><small>Awaiting your presence</small><b>All Family Members</b></div>
     <div id="cd" class="rv d7">— counting the days —</div>
@@ -610,12 +610,14 @@
   /* ---------- PERSONALIZATION (read from link) ---------- */
   function b64decodeUnicode(str){try{return decodeURIComponent(Array.prototype.map.call(atob(str),function(c){return '%'+('00'+c.charCodeAt(0).toString(16)).slice(-2);}).join(''));}catch(e){return '';}}
   function getConfig(){
-    var p=new URLSearchParams(location.search), cfg={to:'',ev:'both',n:'',rel:'',note:''};
+    var p=new URLSearchParams(location.search), cfg={to:'',ev:'both',n:'',nN:'',nS:'',rel:'',note:''};
     var g=p.get('g');
-    if(g){ try{var o=JSON.parse(b64decodeUnicode(g)); if(o&&typeof o==='object'){cfg.to=o.to||'';cfg.ev=o.ev||'both';cfg.n=o.n||'';cfg.rel=o.rel||'';cfg.note=o.note||'';}}catch(e){} }
+    if(g){ try{var o=JSON.parse(b64decodeUnicode(g)); if(o&&typeof o==='object'){cfg.to=o.to||'';cfg.ev=o.ev||'both';cfg.n=o.n||'';cfg.nN=o.nN||'';cfg.nS=o.nS||'';cfg.rel=o.rel||'';cfg.note=o.note||'';}}catch(e){} }
     if(p.get('to')!==null) cfg.to=p.get('to');
     if(p.get('ev')!==null) cfg.ev=p.get('ev');
     if(p.get('n')!==null)  cfg.n=p.get('n');
+    if(p.get('nN')!==null) cfg.nN=p.get('nN');
+    if(p.get('nS')!==null) cfg.nS=p.get('nS');
     if(p.get('rel')!==null) cfg.rel=p.get('rel');
     if(p.get('note')!==null) cfg.note=p.get('note');
     return cfg;
@@ -645,13 +647,23 @@
     var rel=String(CFG.rel||'guests').toLowerCase();
     if(NOTES[rel]) nt.textContent=NOTES[rel];
   })();
-  /* count / badge label: number -> "Reserved for N Guests"; text -> shown as-is */
-  if(CFG.n){
-    var raw=String(CFG.n).trim(), lbl;
-    if(/^\d+$/.test(raw)){ lbl='Reserved for '+raw+(raw==='1'?' Guest':' Guests'); }
-    else { lbl=raw; }
-    $$('.badge').forEach(function(b){b.textContent=lbl;});
-  }
+  /* count / badge label per event: number -> "Reserved for N Guests"; text -> shown as-is.
+     nN = Nikkah count, nS = Shalima count; n = fallback applied to both. */
+  (function(){
+    function mkLabel(raw){
+      raw=String(raw||'').trim(); if(!raw) return '';
+      if(/^\d+$/.test(raw)) return 'Reserved for '+raw+(raw==='1'?' Guest':' Guests');
+      return raw;
+    }
+    function setBadges(sel,raw){
+      var lbl=mkLabel(raw); if(!lbl) return;
+      var sec=document.querySelector(sel); if(!sec) return;
+      [].forEach.call(sec.querySelectorAll('.badge'),function(b){b.textContent=lbl;});
+    }
+    var nk=CFG.nN||CFG.n, sh=CFG.nS||CFG.n;
+    setBadges('#nikahSec',nk);
+    setBadges('#shalimaSec',sh);
+  })();
   /* countdown to Shalima by Pakistan time */
   function cd(){
     var fmt=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Karachi',year:'numeric',month:'2-digit',day:'2-digit'});
@@ -668,15 +680,13 @@
       var d=this.dataset, ua=navigator.userAgent||'';
       var isAndroid=/Android/i.test(ua);
       var isiOS=/iPad|iPhone|iPod/i.test(ua) || (/Macintosh/i.test(ua) && typeof document!=='undefined' && 'ontouchend' in document);
-      /* Android -> open Google Calendar (adds to the phone's calendar) */
-      if(isAndroid){
-        var g='https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(d.title)+'&dates='+d.start+'/'+d.end+'&location='+encodeURIComponent(d.loc)+'&details='+encodeURIComponent(d.desc);
-        var w=window.open(g,'_blank'); if(!w)window.location.href=g; return;
-      }
-      var ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//AyeshaBalaj//Wedding//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH','BEGIN:VEVENT','UID:'+d.uid+'@ayesha-balaj','DTSTAMP:20261123T000000Z','DTSTART:'+d.start,'DTEND:'+d.end,'SUMMARY:'+d.title,'LOCATION:'+d.loc,'DESCRIPTION:'+d.desc,'END:VEVENT','END:VCALENDAR'].join('\r\n');
+      /* reminders: (1) morning the day before  (2) 3 hours before the event */
+      var al=['BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:Reminder — '+d.title,'TRIGGER:-PT3H','END:VALARM'];
+      if(d.alarm){ al=['BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:Reminder — '+d.title,'TRIGGER;VALUE=DATE-TIME:'+d.alarm,'END:VALARM'].concat(al); }
+      var ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//AyeshaBalaj//Wedding//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH','BEGIN:VEVENT','UID:'+d.uid+'@ayesha-balaj','DTSTAMP:20261123T000000Z','DTSTART:'+d.start,'DTEND:'+d.end,'SUMMARY:'+d.title,'LOCATION:'+d.loc,'DESCRIPTION:'+d.desc].concat(al,['END:VEVENT','END:VCALENDAR']).join('\r\n');
       var dataUrl='data:text/calendar;charset=utf-8,'+encodeURIComponent(ics);
-      /* iOS -> open the .ics so the Apple Calendar "Add Event" sheet appears */
-      if(isiOS){ window.location.href=dataUrl; return; }
+      /* Android & iOS -> open the .ics so it adds to the phone's calendar WITH the reminders */
+      if(isAndroid||isiOS){ window.location.href=dataUrl; return; }
       /* Desktop -> download the .ics (opens in the default calendar app) */
       try{
         var blob=new Blob([ics],{type:'text/calendar;charset=utf-8'});
